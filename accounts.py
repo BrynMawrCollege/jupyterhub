@@ -14,6 +14,8 @@ from tornado.httpserver import HTTPServer
 from tornado.web import RequestHandler, Application
 from jupyterhub.services.auth import HubAuthenticated
 
+DEFAULT_EMAIL = "brynmawr.edu"
+
 class AccountsHandler(HubAuthenticated, RequestHandler):
     hub_users = None # the users allowed to access me (everyone can try)
 
@@ -30,10 +32,10 @@ class AccountsHandler(HubAuthenticated, RequestHandler):
 <p>Each line should be in one of the following forms:</p>
 
 <pre>
-   username                             OR
-   username@address                     OR
-   Real Name, username@school.edu       OR
-   Real Name, username-email            OR
+   username                        (assumes default email)   OR
+   username@school.edu                                       OR
+   Real Name, username@school.edu                            OR
+   Real Name, username             (assumes default email)   OR
    Real Name, email@school.edu, username
 </pre>
 
@@ -41,7 +43,7 @@ class AccountsHandler(HubAuthenticated, RequestHandler):
   <textarea rows="30" cols="70" name="usernames"></textarea>
   <br><br>
   <b>Professor name and email:</b> <input size="50" type="text" name="prof_email"/> <br/>
-  <b>Send Email:<b> <input type="checkbox" name="Send Email" value="send"></input><br/> 
+  <b>Send Email:<b> <input type="checkbox" name="Send Email" value="send"></input><br/>
   <b>Display Passwords:</b> <input type="checkbox" name="Display Passwords" value="display"></input> <br/> <br/>
   <input type="submit" value="Create Accounts">
 </form>
@@ -65,7 +67,7 @@ class AccountsHandler(HubAuthenticated, RequestHandler):
 
     def process_lines(self, lines, prof_email, send_email, display):
         """
-        filename is a file: 
+        filename is a file:
            username                             OR
            username@address                     OR
            Real Name, email+username            OR
@@ -83,7 +85,7 @@ class AccountsHandler(HubAuthenticated, RequestHandler):
                     username = email.split("@")[0]
                 else:
                     username = data[0]
-                    email = data[0] + "@" + "brynmawr.edu" 
+                    email = data[0] + "@" + DEFAULT_EMAIL
                 realname = "Jupyter User"
             elif len(data) == 2: # REALNAME, USERNAME/EMAIL
                 if "@" in data[1]:
@@ -93,7 +95,7 @@ class AccountsHandler(HubAuthenticated, RequestHandler):
                 else:
                     realname = data[0]
                     username = data[1]
-                    email = data[1] + "@" + "brynmawr.edu"
+                    email = data[1] + "@" + DEFAULT_EMAIL
             elif len(data) == 3: # REALNAME, EMAIL, USERNAME
                 realname = data[0]
                 email = data[1]
@@ -112,7 +114,7 @@ class AccountsHandler(HubAuthenticated, RequestHandler):
                 #continue ## Do it anyway
             # otherwise, make account
             gecos = "%s <%s>" % (realname, email)
-            password = make_password("-w safe6 -n 4 --min 1 --max=6") 
+            password = make_password("-w safe6 -n 4 --min 1 --max=6")
             env = {
                 "username": username,
                 "gecos": gecos,
@@ -161,7 +163,7 @@ Username: {username}
 Password: {password}
 
 If you have any questions, please check with your instructor
-({prof_email}).
+{prof_email}
 
 Thank you!
 """
@@ -182,7 +184,7 @@ def make_password(arg_string=None):
         min_length=options.min_length,
         max_length=options.max_length,
         valid_chars=options.valid_chars)
-    
+
     if options.verbose:
         xkcd_password.verbose_reports(my_wordlist, options)
 
@@ -195,12 +197,12 @@ def make_password(arg_string=None):
 
 def get_user_info(username):
     """
-    Returns pwd.struct_passwd(pw_name='baldwin01', 
-                              pw_passwd='x', 
-                              pw_uid=1544, 
-                              pw_gid=1544, 
-                              pw_gecos='Baldwin Student 01', 
-                              pw_dir='/home/baldwin01', 
+    Returns pwd.struct_passwd(pw_name='baldwin01',
+                              pw_passwd='x',
+                              pw_uid=1544,
+                              pw_gid=1544,
+                              pw_gecos='Baldwin Student 01',
+                              pw_dir='/home/baldwin01',
                               pw_shell='/bin/bash')
     """
     retval = None
@@ -215,7 +217,7 @@ def system(command):
     proc = subprocess.Popen(command, stdout=subprocess.PIPE, shell=True)
     (out, err) = proc.communicate()
     return out.decode().strip()
-	
+
 def main():
     app = Application([
         (os.environ['JUPYTERHUB_SERVICE_PREFIX'] + '/?', AccountsHandler),
