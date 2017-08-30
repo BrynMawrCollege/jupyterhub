@@ -11,17 +11,16 @@ from getpass import getuser
 from urllib.parse import urlparse
 from tornado.ioloop import IOLoop
 from tornado.httpserver import HTTPServer
-from tornado.web import RequestHandler, Application, authenticated
+from tornado.web import RequestHandler, Application
 from jupyterhub.services.auth import HubAuthenticated
 
 class AccountsHandler(HubAuthenticated, RequestHandler):
-    hub_users = {getuser()} # the users allowed to access me
+    hub_users = None # the users allowed to access me (everyone can try)
 
-    @authenticated
     def get(self):
         user_model = self.get_current_user()
         self.set_header('content-type', 'text/html')
-        if user_model["admin"]:
+        if user_model is not None and user_model["admin"]:
             self.write("""<!DOCTYPE html>
 <html>
 <body>
@@ -52,7 +51,6 @@ class AccountsHandler(HubAuthenticated, RequestHandler):
         else:
             self.write("Not an admin!")
 
-    @authenticated
     def post(self):
         user_model = self.get_current_user()
         usernames = self.get_argument('usernames').split("\n")
@@ -60,7 +58,7 @@ class AccountsHandler(HubAuthenticated, RequestHandler):
         display = self.get_argument('Display Passwords', "") == "display"
         send_email = self.get_argument('Send Email', "") == "send"
         self.set_header('content-type', 'text/html')
-        if user_model["admin"]:
+        if user_model is not None and user_model["admin"]:
             self.process_lines(usernames, prof_email, send_email, display)
         else:
             self.write("Not an admin!")
