@@ -168,7 +168,7 @@ If you have any questions, please check with your instructor
 Thank you!
 """
                 env["message"] = message.format(**env)
-                system('echo -e "{message}" | mail -c "systems.cs.brynmawr.edu" -s "Computer Science Course Resources" {email}'.format(**env))
+                system('echo -e "{message}" | mail -s "Bryn Mawr College - Jupyter Computer Resource" {email}'.format(**env))
 
 def make_password(arg_string=None):
     if arg_string is None:
